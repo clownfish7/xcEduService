@@ -7,6 +7,7 @@ import com.xuecheng.framework.domain.course.Teachplan;
 import com.xuecheng.framework.domain.course.ext.CourseInfo;
 import com.xuecheng.framework.domain.course.ext.TeachplanNode;
 import com.xuecheng.framework.domain.course.request.CourseListRequest;
+import com.xuecheng.framework.domain.course.response.AddCourseResult;
 import com.xuecheng.framework.exception.ExceptionCast;
 import com.xuecheng.framework.model.response.CommonCode;
 import com.xuecheng.framework.model.response.QueryResponseResult;
@@ -139,6 +140,43 @@ public class CourseService {
         result.setList(list);
         result.setTotal(total);
         return new QueryResponseResult(CommonCode.SUCCESS, result);
+    }
+
+    //添加课程提交
+    @Transactional
+    public AddCourseResult addCourseBase(CourseBase courseBase) {
+        //课程默认状态为未发布
+        courseBase.setStatus("202001");
+        courseBaseRepository.save(courseBase);
+        return new AddCourseResult(CommonCode.SUCCESS, courseBase.getId());
+    }
+
+    //获取课程基本信息by id
+    public CourseBase getCourseBaseById(String coureseId) {
+        Optional<CourseBase> optional = courseBaseRepository.findById(coureseId);
+        if (optional.isPresent()) {
+            return optional.get();
+        }
+        return null;
+    }
+
+    //更新课程基本信息
+    @Transactional
+    public ResponseResult updateCourseBase(String id, CourseBase courseBase) {
+        CourseBase base = this.getCourseBaseById(id);
+        if (base == null) {
+            ExceptionCast.cast(CommonCode.INVALID_PARAM);
+        }
+        //修改课程信息
+        base.setName(courseBase.getName());
+        base.setMt(courseBase.getMt());
+        base.setSt(courseBase.getSt());
+        base.setGrade(courseBase.getGrade());
+        base.setStudymodel(courseBase.getStudymodel());
+        base.setUsers(courseBase.getUsers());
+        base.setDescription(courseBase.getDescription());
+        CourseBase save = courseBaseRepository.save(base);
+        return new ResponseResult(CommonCode.SUCCESS);
     }
 
 }
