@@ -11,6 +11,7 @@ import com.xuecheng.framework.model.response.QueryResponseResult;
 import com.xuecheng.framework.model.response.ResponseResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.springframework.web.bind.annotation.PathVariable;
 
 /**
  * @author You
@@ -51,5 +52,8 @@ public interface CourseControllerApi {
 
     @ApiOperation("预览课程")
     public CoursePublishResult preview(String id);
+
+    @ApiOperation("发布课程")
+    public CoursePublishResult publish(@PathVariable String id);
 
 }
