@@ -20,4 +20,9 @@ public class CmsPageClientFallBack implements CmsPageClient {
         cmsPage.setPageName("熔断");
         return new CmsPageResult(CommonCode.SERVER_ERROR, cmsPage);
     }
+
+    @Override
+    public CmsPageResult save(CmsPage cmsPage) {
+        return null;
+    }
 }

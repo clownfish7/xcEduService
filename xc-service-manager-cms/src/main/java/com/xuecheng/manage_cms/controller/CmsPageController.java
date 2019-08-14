@@ -40,7 +40,7 @@ public class CmsPageController implements CmsPageControllerApi {
     @GetMapping("/get/{id}")
     public CmsPageResult findById(@PathVariable("id") String id) {
         CmsPage cmsPage = cmsPageService.getById(id);
-        if (cmsPage!=null) {
+        if (cmsPage != null) {
             return new CmsPageResult(CommonCode.SUCCESS, cmsPage);
         }
         return new CmsPageResult(CommonCode.FAIL, null);
@@ -62,5 +62,11 @@ public class CmsPageController implements CmsPageControllerApi {
     @PostMapping("/postPage/{pageId}")
     public ResponseResult post(@PathVariable("pageId") String pageId) {
         return cmsPageService.postPage(pageId);
+    }
+
+    @Override
+    @PostMapping("/save")
+    public CmsPageResult save(@RequestBody CmsPage cmsPage) {
+        return cmsPageService.save(cmsPage);
     }
 }

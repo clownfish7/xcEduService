@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author You
@@ -23,7 +24,8 @@ public class CmsPagePreviewController extends BaseController {
     private CmsPageService cmsPageService;
 
     @GetMapping("/{pageId}")
-    public void preview(@PathVariable("pageId") String pageId) {
+    public void preview(@PathVariable("pageId") String pageId, HttpServletResponse response) {
+        response.setHeader("Content-type", "text/html;charset=utf-8");
         String html = cmsPageService.getPageHtml(pageId);
         if (StringUtils.isNotEmpty(html)) {
             try {

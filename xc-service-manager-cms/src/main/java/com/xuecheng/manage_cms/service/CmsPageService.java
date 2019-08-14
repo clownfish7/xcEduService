@@ -287,7 +287,7 @@ public class CmsPageService {
     public CmsPage saveHtml(String pageId, String content) {
         //先得到页面信息
         CmsPage cmsPage = this.getById(pageId);
-        if(cmsPage == null){
+        if (cmsPage == null) {
             ExceptionCast.cast(CommonCode.INVALID_PARAM);
         }
         ObjectId objectId = null;
@@ -305,21 +305,35 @@ public class CmsPageService {
         cmsPageRepository.save(cmsPage);
         return cmsPage;
     }
+
     //发送页面发送消息
-    private void sendPostPage(String pageId){
+    private void sendPostPage(String pageId) {
         //得到页面信息
         CmsPage cmsPage = this.getById(pageId);
-        if(cmsPage == null){
+        if (cmsPage == null) {
             ExceptionCast.cast(CommonCode.INVALID_PARAM);
         }
         //创建消息对象
-        Map<String,String> msg = new HashMap<>();
-        msg.put("pageId",pageId);
+        Map<String, String> msg = new HashMap<>();
+        msg.put("pageId", pageId);
         //转成json串
         String jsonString = JSON.toJSONString(msg);
         //发送给mq
         //站点id
         String siteId = cmsPage.getSiteId();
-        rabbitTemplate.convertAndSend(RabbitmqConfig.EX_ROUTING_CMS_POSTPAGE,siteId,jsonString);
+        rabbitTemplate.convertAndSend(RabbitmqConfig.EX_ROUTING_CMS_POSTPAGE, siteId, jsonString);
+    }
+
+    //添加页面，如果已存在则更新页面  
+    public CmsPageResult save(CmsPage cmsPage) {
+        // 校验页面是否存在，根据页面名称、站点Id、页面webpath查询
+        CmsPage cmsPage1 = cmsPageRepository.findByPageNameAndSiteIdAndPageWebPath(cmsPage.getPageName(), cmsPage.getSiteId(), cmsPage.getPageWebPath());
+        if (cmsPage1 != null) {
+            // 更新
+            return this.update(cmsPage1.getPageId(), cmsPage);
+        } else {
+            // 添加
+            return this.add(cmsPage);
+        }
     }
 }

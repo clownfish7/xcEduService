@@ -2,21 +2,29 @@ package com.xuecheng.manage_course.service;
 
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import com.xuecheng.framework.domain.cms.CmsPage;
+import com.xuecheng.framework.domain.cms.response.CmsPageResult;
 import com.xuecheng.framework.domain.course.CourseBase;
+import com.xuecheng.framework.domain.course.CourseMarket;
 import com.xuecheng.framework.domain.course.CoursePic;
 import com.xuecheng.framework.domain.course.Teachplan;
 import com.xuecheng.framework.domain.course.ext.CourseInfo;
+import com.xuecheng.framework.domain.course.ext.CourseView;
 import com.xuecheng.framework.domain.course.ext.TeachplanNode;
 import com.xuecheng.framework.domain.course.request.CourseListRequest;
 import com.xuecheng.framework.domain.course.response.AddCourseResult;
+import com.xuecheng.framework.domain.course.response.CourseCode;
+import com.xuecheng.framework.domain.course.response.CoursePublishResult;
 import com.xuecheng.framework.exception.ExceptionCast;
 import com.xuecheng.framework.model.response.CommonCode;
 import com.xuecheng.framework.model.response.QueryResponseResult;
 import com.xuecheng.framework.model.response.QueryResult;
 import com.xuecheng.framework.model.response.ResponseResult;
+import com.xuecheng.manage_course.client.CmsPageClient;
 import com.xuecheng.manage_course.dao.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,6 +52,10 @@ public class CourseService {
 
     @Autowired
     private CoursePicRepository coursePicRepository;
+    @Autowired
+    private CourseMarketRepository courseMarketRepository;
+    @Autowired
+    private CmsPageClient cmsPageClient;
 
     //查询课程计划
     public TeachplanNode findTeachplanList(String courseId) {
@@ -182,15 +194,15 @@ public class CourseService {
 
     //添加课程图片
     @Transactional
-    public ResponseResult saveCoursePic(String courseId,String pic){
+    public ResponseResult saveCoursePic(String courseId, String pic) {
         //查询课程图片
         Optional<CoursePic> picOptional = coursePicRepository.findById(courseId);
         CoursePic coursePic = null;
-        if(picOptional.isPresent()){
+        if (picOptional.isPresent()) {
             coursePic = picOptional.get();
         }
         //没有课程图片则新建对象
-        if(coursePic == null){
+        if (coursePic == null) {
             coursePic = new CoursePic();
         }
         coursePic.setCourseid(courseId);
@@ -213,11 +225,92 @@ public class CourseService {
     public ResponseResult deleteCoursePic(String courseId) {
         //执行删除，返回1表示删除成功，返回0表示删除失败
         long result = coursePicRepository.deleteByCourseid(courseId);
-        if(result>0){
+        if (result > 0) {
             return new ResponseResult(CommonCode.SUCCESS);
         }
         return new ResponseResult(CommonCode.FAIL);
     }
 
+    //课程视图查询
+    public CourseView getCoruseView(String id) {
+        CourseView courseView = new CourseView();
+        // 查询课程基本信息
+        Optional<CourseBase> optional = courseBaseRepository.findById(id);
+        if (optional.isPresent()) {
+            CourseBase courseBase = optional.get();
+            courseView.setCourseBase(courseBase);
+        }
+        // 查询课程营销信息
+        Optional<CourseMarket> courseMarketOptional = courseMarketRepository.findById(id);
+        if (courseMarketOptional.isPresent()) {
+            CourseMarket courseMarket = courseMarketOptional.get();
+            courseView.setCourseMarket(courseMarket);
+        }
+        // 查询课程图片信息
+        Optional<CoursePic> picOptional = coursePicRepository.findById(id);
+        if (picOptional.isPresent()) {
+            CoursePic coursePic = picOptional.get();
+            courseView.setCoursePic(picOptional.get());
+        }
+        // 查询课程计划信息
+        TeachplanNode teachplanNode = teachplanMapper.selectList(id);
+        courseView.setTeachplanNode(teachplanNode);
+        return courseView;
+    }
+
+    //根据id查询课程基本信息
+    public CourseBase findCourseBaseById(String courseId) {
+        Optional<CourseBase> baseOptional = courseBaseRepository.findById(courseId);
+        if (baseOptional.isPresent()) {
+            CourseBase courseBase = baseOptional.get();
+            return courseBase;
+        }
+        ExceptionCast.cast(CourseCode.COURSE_GET_NOTEXISTS);
+        return null;
+    }
+
+    @Value("${course‐publish.dataUrlPre}")
+    private String publish_dataUrlPre;
+    @Value("${course‐publish.pagePhysicalPath}")
+    private String publish_page_physicalpath;
+    @Value("${course‐publish.pageWebPath}")
+    private String publish_page_webpath;
+    @Value("${course‐publish.siteId}")
+    private String publish_siteId;
+    @Value("${course‐publish.templateId}")
+    private String publish_templateId;
+    @Value("${course‐publish.previewUrl}")
+    private String previewUrl;
+
+    //课程预览
+    public CoursePublishResult preview(String courseId) {
+        CourseBase one = this.findCourseBaseById(courseId);
+        // 发布课程预览页面
+        CmsPage cmsPage = new CmsPage();
+        // 站点
+        cmsPage.setSiteId(publish_siteId);//课程预览站点
+        // 模板
+        cmsPage.setTemplateId(publish_templateId);
+        // 页面名称
+        cmsPage.setPageName(courseId + ".html");
+        // 页面别名
+        cmsPage.setPageAliase(one.getName());
+        // 页面访问路径
+        cmsPage.setPageWebPath(publish_page_webpath);
+        // 页面存储路径
+        cmsPage.setPagePhysicalPath(publish_page_physicalpath);
+        // 数据url
+        cmsPage.setDataUrl(publish_dataUrlPre + courseId);
+        // 远程请求cms保存页面信息
+        CmsPageResult cmsPageResult = cmsPageClient.save(cmsPage);
+        if (!cmsPageResult.isSuccess()) {
+            return new CoursePublishResult(CommonCode.FAIL, null);
+        }
+        // 页面id
+        String pageId = cmsPageResult.getCmsPage().getPageId();
+        // 页面url
+        String pageUrl = previewUrl + pageId;
+        return new CoursePublishResult(CommonCode.SUCCESS, pageUrl);
+    }
 
 }
