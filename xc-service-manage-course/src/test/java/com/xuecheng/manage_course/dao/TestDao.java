@@ -9,14 +9,20 @@ import com.xuecheng.framework.domain.course.ext.CourseInfo;
 import com.xuecheng.framework.domain.course.ext.TeachplanNode;
 import com.xuecheng.framework.domain.course.request.CourseListRequest;
 import com.xuecheng.manage_course.client.CmsPageClient;
+import org.apache.tomcat.jni.FileInfo;
+import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,6 +43,9 @@ public class TestDao {
 
     @Autowired
     RestTemplate restTemplate;
+
+    @Autowired
+    GridFsTemplate gridFsTemplate;
 
     @Test
     public void testCourseBaseRepository() {
@@ -84,5 +93,12 @@ public class TestDao {
         }
     }
 
+    @Test
+    public void uploadTemplate() throws FileNotFoundException {
+        File file = new File("D:\\BaiduNetdiskDownload\\19 微服务项目【学成在线】\\day09 课程预览 Eureka Feign\\资料\\课程详情页面模板\\course.ftl");
+        FileInputStream fis = new FileInputStream(file);
+        ObjectId objectId = gridFsTemplate.store(fis, "课程详情模板文件","");
+        System.out.println(objectId.toString());
+    }
 
 }

@@ -1,5 +1,10 @@
 package com.xuecheng.framework.domain.course.ext;
 
+/**
+ * @author You
+ * @create 2019-08-14 20:36
+ */
+
 import com.xuecheng.framework.domain.course.CourseBase;
 import com.xuecheng.framework.domain.course.CourseMarket;
 import com.xuecheng.framework.domain.course.CoursePic;
@@ -9,12 +14,6 @@ import lombok.ToString;
 
 import java.io.Serializable;
 
-/**
- * @author yzy
- * @classname CourseView
- * @description TODO
- * @create 2019-08-14 17:39
- */
 @Data
 @ToString
 @NoArgsConstructor
@@ -24,3 +23,4 @@ public class CourseView implements Serializable {
     private CoursePic coursePic;//课程图片
     private TeachplanNode teachplanNode;//教学计划
 }
+
