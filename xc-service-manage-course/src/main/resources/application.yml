@@ -50,5 +50,6 @@ course‐publish:
   templateId: 5ad9a24d68db5239b8fef199
   previewUrl: http://127.0.0.1/cms/preview/
   pageWebPath: /course/detail/
-  pagePhysicalPath: G:\\YOU\\Study\\WebStorm\\project\\xceduWeb\\static\\course\\detail\\
+#  pagePhysicalPath: G:\\YOU\\Study\\WebStorm\\project\\xceduWeb\\static\\course\\detail\\
+  pagePhysicalPath: D:\webstorm\project\xceduWeb\devlop\xuecheng\static\course\detail
   dataUrlPre: http://localhost:31200/course/courseview/
