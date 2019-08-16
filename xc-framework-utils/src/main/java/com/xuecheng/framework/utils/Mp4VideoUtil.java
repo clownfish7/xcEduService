@@ -13,6 +13,7 @@ public class Mp4VideoUtil extends VideoUtil {
     String video_path = "D:\\BaiduNetdiskDownload\\test1.avi";
     String mp4_name = "test1.mp4";
     String mp4folder_path = "D:/BaiduNetdiskDownload/Movies/test1/";
+
     public Mp4VideoUtil(String ffmpeg_path, String video_path, String mp4_name, String mp4folder_path){
         super(ffmpeg_path);
         this.ffmpeg_path = ffmpeg_path;
@@ -20,6 +21,7 @@ public class Mp4VideoUtil extends VideoUtil {
         this.mp4_name = mp4_name;
         this.mp4folder_path = mp4folder_path;
     }
+
     //清除已生成的mp4
     private void clear_mp4(String mp4_path){
         //删除原来已经生成的m3u8及ts文件
