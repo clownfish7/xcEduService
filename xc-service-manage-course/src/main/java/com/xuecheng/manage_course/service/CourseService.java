@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -60,6 +61,8 @@ public class CourseService {
     private CmsPageClient cmsPageClient;
     @Autowired
     private CoursePubRepository coursePubRepository;
+    @Autowired
+    private TeachplanMediaRepository teachplanMediaRepository;
 
     //查询课程计划
     public TeachplanNode findTeachplanList(String courseId) {
@@ -339,7 +342,26 @@ public class CourseService {
 
         // 页面url
         String pageUrl = cmsPostPageResult.getPageUrl();
+
+        // 向 teachplanMediaPub 保存课程的媒资信息
+        saveTeachplanMediaPub(courseId);
         return new CoursePublishResult(CommonCode.SUCCESS, pageUrl);
+    }
+
+    @Autowired
+    private TeacheplanMediaPubRepository teacheplanMediaPubRepository;
+
+    private void saveTeachplanMediaPub(String courseId) {
+        teacheplanMediaPubRepository.deleteByCourseId(courseId);
+        List<TeachplanMedia> teachplanMediaList = teachplanMediaRepository.findByCourseId(courseId);
+        List<TeachplanMediaPub> teachplanMediaPubs = new ArrayList<>();
+        for (TeachplanMedia teachplanMedia : teachplanMediaList) {
+            TeachplanMediaPub teachplanMediaPub = new TeachplanMediaPub();
+            BeanUtils.copyProperties(teachplanMedia, teachplanMediaPub);
+            teachplanMediaPub.setTimestamp(new Date());
+            teachplanMediaPubs.add(teachplanMediaPub);
+        }
+        teacheplanMediaPubRepository.saveAll(teachplanMediaPubs);
     }
 
     //更新课程发布状态
@@ -431,4 +453,38 @@ public class CourseService {
         return coursePub;
     }
 
+    //保存媒资信息 
+    public ResponseResult savemedia(TeachplanMedia teachplanMedia) {
+        if (teachplanMedia == null) {
+            ExceptionCast.cast(CommonCode.FAIL);
+        }
+        // 课程计划
+        String teachplanId = teachplanMedia.getTeachplanId();
+        // 查询课程计划
+        Optional<Teachplan> optional = teachplanRepository.findById(teachplanId);
+        if (!optional.isPresent()) {
+            ExceptionCast.cast(CommonCode.FAIL);
+        }
+        Teachplan teachplan = optional.get();
+        // 只允许为叶子结点课程计划选择视频
+        String grade = teachplan.getGrade();
+        if (StringUtils.isEmpty(grade) || !grade.equals("3")) {
+            ExceptionCast.cast(CommonCode.FAIL);
+        }
+        TeachplanMedia one = null;
+        Optional<TeachplanMedia> teachplanMediaOptional = teachplanMediaRepository.findById(teachplanId);
+        if (!teachplanMediaOptional.isPresent()) {
+            one = new TeachplanMedia();
+        } else {
+            one = teachplanMediaOptional.get();
+        }
+        // 保存媒资信息与课程计划信息
+        one.setTeachplanId(teachplanId);
+        one.setCourseId(teachplanMedia.getCourseId());
+        one.setMediaFileOriginalName(teachplanMedia.getMediaFileOriginalName());
+        one.setMediaId(teachplanMedia.getMediaId());
+        one.setMediaUrl(teachplanMedia.getMediaUrl());
+        teachplanMediaRepository.save(one);
+        return new ResponseResult(CommonCode.SUCCESS);
+    }
 }
